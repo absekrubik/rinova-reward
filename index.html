@@ -703,6 +703,7 @@
         <button class="btn" onclick="openPopup()">Start Registration</button>
 
         <p class="mini-note">
+          Demo number: 9800000000 | Demo OTP: 123456
         </p>
 
         <div class="steps">
@@ -1027,14 +1028,15 @@
     }
 
     function getReward() {
-      const r = Math.random();
+  const r = Math.random();
 
-      if (r < 0.50) return 10;
-      if (r < 0.20) return 20;
-      if (r < 0.20) return 30;
-      if(r<0.08)return 50
-      return 100;
-    }
+  if (r < 0.02) return 100; // 2%
+  if (r < 0.10) return 50;  // next 8%
+  if (r < 0.30) return 30;  // next 20%
+  if (r < 0.50) return 20;  // next 20%
+
+  return 10; // remaining 50%
+}
 
     async function submitStudentDemo() {
       const name = document.getElementById("studentName").value.trim();
