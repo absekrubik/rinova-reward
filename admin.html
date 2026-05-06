@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rinova Admin Panel</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Poppins, Arial, sans-serif; }
+
+    :root {
+      --blue: #0052b8;
+      --green: #168b3f;
+      --orange: #f59d13;
+      --dark: #0b1f3a;
+      --gray: #637083;
+      --bg: #f7fbff;
+      --danger: #d93025;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--dark);
+      padding: 18px;
+    }
+
+    .login-screen {
+      min-height: calc(100vh - 36px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 390px;
+      background: white;
+      border-radius: 30px;
+      padding: 26px;
+      box-shadow: 0 24px 70px rgba(11, 31, 58, 0.14);
+      text-align: center;
+      border-top: 8px solid var(--blue);
+    }
+
+    .logo-box {
+      width: 130px;
+      height: 130px;
+      margin: 0 auto 16px;
+      border-radius: 28px;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 16px 45px rgba(0, 82, 184, 0.12);
+      padding: 12px;
+    }
+
+    .logo-box img, .brand img { width: 100%; height: 100%; object-fit: contain; }
+    h1 { color: var(--blue); font-size: 26px; margin-bottom: 8px; }
+    p { color: var(--gray); font-size: 14px; line-height: 1.5; }
+
+    .form-group { text-align: left; margin: 18px 0 12px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 800; margin-bottom: 7px; }
+
+    .form-group input,
+    .filter-card input,
+    .filter-card select {
+      width: 100%;
+      border: 1px solid rgba(0, 82, 184, 0.16);
+      border-radius: 16px;
+      padding: 14px;
+      font-size: 15px;
+      outline: none;
+      background: white;
+    }
+
+    .btn { border: none; cursor: pointer; border-radius: 14px; padding: 12px 16px; font-weight: 900; background: var(--blue); color: white; }
+    .btn.full { width: 100%; padding: 15px; font-size: 16px; border-radius: 18px; background: linear-gradient(135deg, var(--blue), #0274df); }
+    .btn.green { background: var(--green); }
+    .btn.orange { background: var(--orange); }
+    .btn.danger { background: var(--danger); }
+
+    .admin-app { display: none; max-width: 1150px; margin: 0 auto; }
+    .admin-app.show { display: block; }
+
+    .top-header {
+      background: white;
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: 0 12px 35px rgba(11, 31, 58, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand img { width: 58px; height: 58px; }
+    .brand h2 { color: var(--blue); font-size: 24px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .note {
+      background: rgba(245, 157, 19, 0.12);
+      border: 1px solid rgba(245, 157, 19, 0.22);
+      color: #915b00;
+      border-radius: 18px;
+      padding: 13px;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .stat-card { background: white; border-radius: 20px; padding: 16px; box-shadow: 0 12px 35px rgba(11, 31, 58, 0.07); }
+    .stat-card span { color: var(--gray); font-size: 13px; }
+    .stat-card strong { display: block; color: var(--dark); font-size: 28px; margin-top: 5px; }
+
+    .filter-card {
+      background: white;
+      border-radius: 22px;
+      padding: 14px;
+      box-shadow: 0 12px 35px rgba(11, 31, 58, 0.07);
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .table-card { background: white; border-radius: 24px; padding: 14px; box-shadow: 0 12px 35px rgba(11, 31, 58, 0.08); overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 880px; }
+    th, td { text-align: left; padding: 12px; border-bottom: 1px solid #edf2f7; font-size: 13px; }
+    th { color: var(--blue); background: #f4f9ff; white-space: nowrap; }
+    .phone-link { color: var(--blue); font-weight: 800; text-decoration: none; }
+    .phone-link:hover { text-decoration: underline; }
+
+    .status-badge { display: inline-block; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+    .status-reserved { background: rgba(245, 157, 19, 0.14); color: #915b00; }
+    .status-ready { background: rgba(0, 82, 184, 0.12); color: var(--blue); }
+    .status-completed { background: rgba(22, 139, 63, 0.14); color: var(--green); }
+
+    .status-select { border: 1px solid rgba(0, 82, 184, 0.16); border-radius: 12px; padding: 8px; font-size: 12px; outline: none; background: white; }
+    .empty { text-align: center; padding: 26px; color: var(--gray); }
+
+    @media (max-width: 760px) {
+      body { padding: 12px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .filter-card { grid-template-columns: 1fr; }
+      .brand h2 { font-size: 20px; }
+    }
+  </style>
+</head>
+
+<body>
+  <section class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <div class="logo-box">
+        <img src="assets/rinova-logo.png" alt="Rinova Education Logo" />
+      </div>
+
+      <h1>Admin Login</h1>
+      <p>This page is only for Rinova staff.</p>
+
+      <div class="form-group">
+        <label for="adminPassword">Admin Password</label>
+        <input id="adminPassword" type="password" placeholder="Enter admin password" />
+      </div>
+
+      <button class="btn full" onclick="loginAdmin()">Open Admin Panel</button>
+      <p style="margin-top:12px;font-size:12px;">Demo password: <strong>rinova123</strong></p>
+    </div>
+  </section>
+
+  <main class="admin-app" id="adminApp">
+    <header class="top-header">
+      <div class="brand">
+        <img src="assets/rinova-logo.png" alt="Rinova Education Logo" />
+        <div>
+          <h2>Rinova Admin Panel</h2>
+          <p>Student leads, reserved rewards and recharge monitoring.</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn green" onclick="downloadCSV()">Export CSV</button>
+        <button class="btn orange" onclick="refreshAdmin()">Refresh</button>
+        <button class="btn danger" onclick="logoutAdmin()">Logout</button>
+      </div>
+    </header>
+
+    <div class="note">
+      Rewards are reserved now. Recharge can be completed later when eSewa Merchant API is available.
+    </div>
+
+    <section class="stats-grid">
+      <div class="stat-card"><span>Total Leads</span><strong id="totalLeads">0</strong></div>
+      <div class="stat-card"><span>Study Abroad</span><strong id="abroadLeads">0</strong></div>
+      <div class="stat-card"><span>Classes / Skills</span><strong id="classLeads">0</strong></div>
+      <div class="stat-card"><span>Total Reserved Rewards</span><strong id="totalRewards">Rs.0</strong></div>
+    </section>
+
+    <section class="filter-card">
+      <input id="searchInput" type="text" placeholder="Search by name, phone or interest..." oninput="renderAdmin()" />
+      <select id="statusFilter" onchange="renderAdmin()">
+        <option value="all">All Status</option>
+        <option value="Reserved">Reserved</option>
+        <option value="Ready for Recharge">Ready for Recharge</option>
+        <option value="Completed">Completed</option>
+      </select>
+    </section>
+
+    <section class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Full Name</th>
+            <th>Phone</th>
+            <th>Interested In</th>
+            <th>Reward</th>
+            <th>Status</th>
+            <th>Update Status</th>
+          </tr>
+        </thead>
+        <tbody id="leadTableBody"></tbody>
+      </table>
+      <div class="empty" id="emptyState">No leads found yet.</div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZ1qF5CJgeIeptcEroAIJfDj_FuGABPv4",
+      authDomain: "rinova-student-campaign.firebaseapp.com",
+      projectId: "rinova-student-campaign",
+      storageBucket: "rinova-student-campaign.firebasestorage.app",
+      messagingSenderId: "791075642636",
+      appId: "1:791075642636:web:9647c4d71999cac947fd29"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const ADMIN_PASSWORD = "rinova123";
+    let cachedLeads = [];
+
+    function loginAdmin() {
+      const password = document.getElementById("adminPassword").value.trim();
+
+      if (password !== ADMIN_PASSWORD) {
+        alert("Incorrect password.");
+        return;
+      }
+
+      sessionStorage.setItem("rinovaAdmin", "yes");
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("adminApp").classList.add("show");
+      renderAdmin();
+    }
+
+    function logoutAdmin() {
+      sessionStorage.removeItem("rinovaAdmin");
+      document.getElementById("adminApp").classList.remove("show");
+      document.getElementById("loginScreen").style.display = "flex";
+      document.getElementById("adminPassword").value = "";
+    }
+
+    async function getLeads() {
+      const snapshot = await getDocs(collection(db, "leads"));
+      return snapshot.docs.map((document) => ({
+        id: document.id,
+        ...document.data()
+      }));
+    }
+
+    function getStatusClass(status) {
+      if (status === "Completed") return "status-completed";
+      if (status === "Ready for Recharge") return "status-ready";
+      return "status-reserved";
+    }
+
+    function normalizeStatus(status) {
+      if (status === "Paid") return "Completed";
+      if (status === "Approved") return "Ready for Recharge";
+      if (status === "Pending") return "Reserved";
+      return status || "Reserved";
+    }
+
+    async function renderAdmin() {
+      const tbody = document.getElementById("leadTableBody");
+      const emptyState = document.getElementById("emptyState");
+      const search = (document.getElementById("searchInput")?.value || "").toLowerCase();
+      const statusFilter = document.getElementById("statusFilter")?.value || "all";
+
+      tbody.innerHTML = "";
+      cachedLeads = await getLeads();
+
+      const filteredLeads = cachedLeads.filter((item) => {
+        const status = normalizeStatus(item.rewardStatus);
+        const text = `${item.name || ""} ${item.phone || ""} ${item.goal || ""}`.toLowerCase();
+        return text.includes(search) && (statusFilter === "all" || status === statusFilter);
+      });
+
+      document.getElementById("totalLeads").textContent = cachedLeads.length;
+
+      document.getElementById("abroadLeads").textContent = cachedLeads.filter((item) => {
+        const goal = (item.goal || "").toLowerCase();
+        return goal.includes("abroad") || goal.includes("study");
+      }).length;
+
+      document.getElementById("classLeads").textContent = cachedLeads.filter((item) => {
+        const goal = (item.goal || "").toLowerCase();
+        return !goal.includes("abroad") && !goal.includes("study");
+      }).length;
+
+      document.getElementById("totalRewards").textContent =
+        "Rs." + cachedLeads.reduce((sum, item) => sum + Number(item.reward || 0), 0);
+
+      if (filteredLeads.length === 0) {
+        emptyState.style.display = "block";
+        emptyState.textContent = cachedLeads.length === 0 ? "No leads found yet." : "No leads match your search/filter.";
+        return;
+      }
+
+      emptyState.style.display = "none";
+
+      filteredLeads.forEach((item, index) => {
+        const status = normalizeStatus(item.rewardStatus);
+        const phoneDigits = String(item.phone || "").replace(/[^0-9]/g, "");
+        const telNumber = phoneDigits.startsWith("977") ? "+" + phoneDigits : "+977" + phoneDigits;
+
+        const row = document.createElement("tr");
+        row.innerHTML =
+          "<td>" + (index + 1) + "</td>" +
+          "<td>" + new Date(item.createdAt).toLocaleString() + "</td>" +
+          "<td><strong>" + (item.name || "-") + "</strong></td>" +
+          "<td><a class='phone-link' href='tel:" + telNumber + "'>" + (item.phone || "-") + "</a></td>" +
+          "<td>" + (item.goal || "-") + "</td>" +
+          "<td><strong>Rs." + (item.reward || 0) + "</strong></td>" +
+          "<td><span class='status-badge " + getStatusClass(status) + "'>" + status + "</span></td>" +
+          "<td>" +
+            "<select class='status-select' onchange=\"updateRewardStatus('" + item.id + "', this.value)\">" +
+              "<option value='Reserved' " + (status === "Reserved" ? "selected" : "") + ">Reserved</option>" +
+              "<option value='Ready for Recharge' " + (status === "Ready for Recharge" ? "selected" : "") + ">Ready for Recharge</option>" +
+              "<option value='Completed' " + (status === "Completed" ? "selected" : "") + ">Completed</option>" +
+            "</select>" +
+          "</td>";
+
+        tbody.appendChild(row);
+      });
+    }
+
+    async function updateRewardStatus(id, status) {
+      const ref = doc(db, "leads", id);
+      await updateDoc(ref, { rewardStatus: status });
+      renderAdmin();
+    }
+
+    function refreshAdmin() {
+      renderAdmin();
+    }
+
+    function downloadCSV() {
+      if (cachedLeads.length === 0) {
+        alert("No data to export.");
+        return;
+      }
+
+      const headers = ["Date", "Full Name", "Phone", "Interested In", "Reward", "Status"];
+
+      const rows = cachedLeads.map((item) => [
+        item.createdAt || "",
+        item.name || "",
+        item.phone || "",
+        item.goal || "",
+        "Rs." + (item.reward || 0),
+        normalizeStatus(item.rewardStatus)
+      ]);
+
+      const csv = [headers, ...rows]
+        .map((row) => row.map((value) => '"' + String(value).replace(/"/g, '""') + '"').join(","))
+        .join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "rinova-student-leads.csv";
+      link.click();
+
+      URL.revokeObjectURL(url);
+    }
+
+    window.addEventListener("load", function () {
+      if (sessionStorage.getItem("rinovaAdmin") === "yes") {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("adminApp").classList.add("show");
+        renderAdmin();
+      }
+    });
+
+    window.loginAdmin = loginAdmin;
+    window.logoutAdmin = logoutAdmin;
+    window.downloadCSV = downloadCSV;
+    window.refreshAdmin = refreshAdmin;
+    window.renderAdmin = renderAdmin;
+    window.updateRewardStatus = updateRewardStatus;
+  </script>
+</body>
+</html>
