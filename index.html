@@ -702,6 +702,9 @@
 
         <button class="btn" onclick="openPopup()">Start Registration</button>
 
+        <p class="mini-note">
+          Demo number: 9800000000 | Demo OTP: 123456
+        </p>
 
         <div class="steps">
           <div class="step">
@@ -779,17 +782,16 @@
               <img src="assets/rinova-logo.png" class="ad-logo" alt="Rinova Education Logo" />
             </div>
             <div class="ad-icon">📚</div>
-            <h2>Our Services</h2>
+            <h2>Classes for Students</h2>
             <div class="service-grid">
               <span>IELTS</span>
               <span>PTE</span>
               <span>Tuition Classes</span>
-              <span>Stock Marketing</span>
+              <span>Computer Classes</span>
               <span>Graphics Designing</span>
               <span>Digital Marketing</span>
               <span>Web Development</span>
               <span>Tally Accounting</span>
-              <span>& Many More....</span>
             </div>
           </div>
           <button class="btn" onclick="nextAdSlide(3)">Next</button>
@@ -844,15 +846,25 @@
           <input id="studentName" type="text" placeholder="Enter your full name" />
         </div>
 
+        <div class="form-group">
+          <label for="symbolNumber">Class XII Symbol Number</label>
+          <input id="symbolNumber" type="text" placeholder="Enter your Class XII symbol number" />
+        </div>
+
+        <div class="form-group">
+          <label for="studentPhoto">Upload Admit Card Photo</label>
+          <input id="studentPhoto" type="file" accept="image/*" />
+        </div>
+
         
 
         
 
         <div class="form-group">
-          <label for="goal">Interested in</label>
+          <label for="goal">Interested In</label>
           <select id="goal">
             <option value="">Select your interest</option>
-             <option>Study Abroad</option>
+            <option>Study Abroad</option>
             <option>IELTS</option>
             <option>PTE</option>
             <option>Computer Courses</option>
@@ -899,7 +911,7 @@
           </span>
         </div>
 
-        <button class="btn" onclick="window.open('https://maps.app.goo.gl/BoRJu7uMCNLpSCqr8')">Open Location</button>
+        <button class="btn" onclick="window.open('https://maps.google.com', '_blank')">Open Location</button>
         <button class="close-btn" onclick="closePopup()">Close</button>
       </div>
     </div>
@@ -916,6 +928,13 @@
       where
     } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
+    import {
+      getStorage,
+      ref,
+      uploadBytes,
+      getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyDZ1qF5CJgeIeptcEroAIJfDj_FuGABPv4",
       authDomain: "rinova-student-campaign.firebaseapp.com",
@@ -927,6 +946,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     let registeredPhone = "";
 
@@ -979,6 +999,12 @@
       return !snapshot.empty;
     }
 
+    async function isSymbolAlreadyUsed(symbolNumber) {
+      const q = query(collection(db, "leads"), where("symbolNumber", "==", symbolNumber));
+      const snapshot = await getDocs(q);
+      return !snapshot.empty;
+    }
+
     async function sendOtpDemo() {
       clearPhoneError();
       const phone = document.getElementById("phone").value.trim();
@@ -1026,23 +1052,25 @@
     }
 
     function getReward() {
-  const r = Math.random();
+      const r = Math.random();
 
-  if (r < 0.02) return 100; // 2%
-  if (r < 0.10) return 50;  // next 8%
-  if (r < 0.30) return 30;  // next 20%
-  if (r < 0.50) return 20;  // next 20%
+      if (r < 0.02) return 100; // 2%
+      if (r < 0.10) return 50;  // next 8%
+      if (r < 0.30) return 30;  // next 20%
+      if (r < 0.50) return 20;  // next 20%
 
-  return 10; // remaining 50%
-}
+      return 10; // remaining 50%
+    }
 
     async function submitStudentDemo() {
       const name = document.getElementById("studentName").value.trim();
+      const symbolNumber = document.getElementById("symbolNumber").value.trim();
+      const photoFile = document.getElementById("studentPhoto").files[0];
       const goal = document.getElementById("goal").value;
       const terms = document.getElementById("terms").checked;
 
-      if (!name || !goal) {
-        alert("Please complete all fields.");
+      if (!name || !symbolNumber || !photoFile || !goal) {
+        alert("Please complete all fields and upload your photo.");
         return;
       }
 
@@ -1058,11 +1086,24 @@
         return;
       }
 
+      const symbolUsed = await isSymbolAlreadyUsed(symbolNumber);
+
+      if (symbolUsed) {
+        alert("This Class XII symbol number has already been registered.");
+        return;
+      }
+
       const reward = getReward();
+
+      const photoRef = ref(storage, "student-photos/" + symbolNumber + "-" + Date.now() + "-" + photoFile.name);
+      await uploadBytes(photoRef, photoFile);
+      const photoURL = await getDownloadURL(photoRef);
 
       const leadData = {
         phone: registeredPhone,
         name: name,
+        symbolNumber: symbolNumber,
+        photoURL: photoURL,
         goal: goal,
         reward: reward,
         rewardStatus: "Reserved",
