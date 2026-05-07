@@ -693,7 +693,7 @@
         <div class="promo-banner">
           <div class="banner-bg"></div>
           <div class="banner-content">
-            <span class="banner-badge">LIMITED OFFER</span>
+            <span class="banner-badge">LIMITED OFFER 11:00am - 11:40am</span>
             <h2>Register & Win</h2>
             <h3>Recharge upto Rs.100 🎁</h3>
             <p>Quick signup • Instant reward • Only for +2 students</p>
@@ -702,11 +702,10 @@
 
         <button class="btn" onclick="openPopup()">Start Registration</button>
 
-
         <div class="steps">
           <div class="step">
             <div class="step-number">1</div>
-            <p><strong>Enter Phone Number</strong>Enter your mobile number.</p>
+            <p><strong>Verify Phone</strong>Enter your mobile number.</p>
           </div>
           <div class="step">
             <div class="step-number">2</div>
@@ -784,7 +783,7 @@
               <span>IELTS</span>
               <span>PTE</span>
               <span>Tuition Classes</span>
-              <span>Computer Classes</span>
+              <span>Stock Marketing</span>
               <span>Graphics Designing</span>
               <span>Digital Marketing</span>
               <span>Web Development</span>
@@ -823,10 +822,14 @@
             <div class="ad-icon">⭐</div>
             <h2>Why Rinova?</h2>
             <ul class="why-list">
-              <li>Friendly counselling for your future goal</li>
-              <li>Experienced instructors and practical classes</li>
-              <li>Multiple courses under one roof</li>
-              <li>Free demo class and student support</li>
+              <li>Proven IELTS Results</li>
+              <li>Complete Transparency</li>
+              <li>Free Career Counseling</li>
+              <li>Scholarship-Focused Approach</li>
+              <li>High Visa Success Rate</li>
+              <li>Experienced Trainers</li>
+              <li>Attractive Offers Available</li>
+              
             </ul>
           </div>
           <button class="btn" onclick="showStep('stepStudent')">Continue Registration</button>
@@ -843,16 +846,6 @@
           <input id="studentName" type="text" placeholder="Enter your full name" />
         </div>
 
-        <div class="form-group">
-          <label for="symbolNumber">Class XII Symbol Number</label>
-          <input id="symbolNumber" type="text" placeholder="Enter your Class XII symbol number" />
-        </div>
-
-        <div class="form-group">
-          <label for="studentPhoto">Upload Admit Card Photo</label>
-          <input id="studentPhoto" type="file" accept="image/*" />
-        </div>
-
         
 
         
@@ -860,7 +853,6 @@
         <div class="form-group">
           <label for="goal">Interested In</label>
           <select id="goal">
-            <option value="">Select your interest</option>
             <option>Study Abroad</option>
             <option>IELTS</option>
             <option>PTE</option>
@@ -908,7 +900,7 @@
           </span>
         </div>
 
-        <button class="btn" onclick="window.open('https://maps.google.com', '_blank')">Open Location</button>
+        <button class="btn" onclick="window.open('https://maps.app.goo.gl/qg9UCuGNxeCAeeUbA')">Open Location</button>
         <button class="close-btn" onclick="closePopup()">Close</button>
       </div>
     </div>
@@ -925,13 +917,6 @@
       where
     } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-    import {
-      getStorage,
-      ref,
-      uploadBytes,
-      getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
-
     const firebaseConfig = {
       apiKey: "AIzaSyDZ1qF5CJgeIeptcEroAIJfDj_FuGABPv4",
       authDomain: "rinova-student-campaign.firebaseapp.com",
@@ -943,7 +928,6 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
     let registeredPhone = "";
 
@@ -993,12 +977,6 @@
       const q = query(collection(db, "leads"), where("phone", "==", phone));
       const snapshot = await getDocs(q);
 
-      return !snapshot.empty;
-    }
-
-    async function isSymbolAlreadyUsed(symbolNumber) {
-      const q = query(collection(db, "leads"), where("symbolNumber", "==", symbolNumber));
-      const snapshot = await getDocs(q);
       return !snapshot.empty;
     }
 
@@ -1061,13 +1039,11 @@
 
     async function submitStudentDemo() {
       const name = document.getElementById("studentName").value.trim();
-      const symbolNumber = document.getElementById("symbolNumber").value.trim();
-      const photoFile = document.getElementById("studentPhoto").files[0];
       const goal = document.getElementById("goal").value;
       const terms = document.getElementById("terms").checked;
 
-      if (!name || !symbolNumber || !photoFile || !goal) {
-        alert("Please complete all fields and upload your photo.");
+      if (!name || !goal) {
+        alert("Please complete all fields.");
         return;
       }
 
@@ -1083,24 +1059,11 @@
         return;
       }
 
-      const symbolUsed = await isSymbolAlreadyUsed(symbolNumber);
-
-      if (symbolUsed) {
-        alert("This Class XII symbol number has already been registered.");
-        return;
-      }
-
       const reward = getReward();
-
-      const photoRef = ref(storage, "student-photos/" + symbolNumber + "-" + Date.now() + "-" + photoFile.name);
-      await uploadBytes(photoRef, photoFile);
-      const photoURL = await getDownloadURL(photoRef);
 
       const leadData = {
         phone: registeredPhone,
         name: name,
-        symbolNumber: symbolNumber,
-        photoURL: photoURL,
         goal: goal,
         reward: reward,
         rewardStatus: "Reserved",
