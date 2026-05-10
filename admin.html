@@ -23,7 +23,7 @@
     .btn.green{background:var(--green)}
     .btn.orange{background:var(--orange)}
     .btn.danger{background:var(--danger)}
-    .admin-app{display:none;max-width:1200px;margin:0 auto}
+    .admin-app{display:none;max-width:1300px;margin:0 auto}
     .admin-app.show{display:block}
     .top-header{background:white;border-radius:24px;padding:18px;box-shadow:0 12px 35px rgba(11,31,58,.08);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:16px}
     .brand{display:flex;align-items:center;gap:12px}
@@ -31,13 +31,13 @@
     .brand h2{color:var(--blue);font-size:24px}
     .actions{display:flex;gap:8px;flex-wrap:wrap}
     .note{background:rgba(245,157,19,.12);border:1px solid rgba(245,157,19,.22);color:#915b00;border-radius:18px;padding:13px;margin-bottom:16px;font-size:13px}
-    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+    .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
     .stat-card{background:white;border-radius:20px;padding:16px;box-shadow:0 12px 35px rgba(11,31,58,.07)}
     .stat-card span{color:var(--gray);font-size:13px}
-    .stat-card strong{display:block;color:var(--dark);font-size:28px;margin-top:5px}
+    .stat-card strong{display:block;color:var(--dark);font-size:26px;margin-top:5px}
     .filter-card{background:white;border-radius:22px;padding:14px;box-shadow:0 12px 35px rgba(11,31,58,.07);display:grid;grid-template-columns:1fr 180px;gap:10px;margin-bottom:16px}
     .table-card{background:white;border-radius:24px;padding:14px;box-shadow:0 12px 35px rgba(11,31,58,.08);overflow-x:auto}
-    table{width:100%;border-collapse:collapse;min-width:980px}
+    table{width:100%;border-collapse:collapse;min-width:1180px}
     th,td{text-align:left;padding:12px;border-bottom:1px solid #edf2f7;font-size:13px;vertical-align:middle}
     th{color:var(--blue);background:#f4f9ff;white-space:nowrap}
     .phone-link{color:var(--blue);font-weight:800;text-decoration:none}
@@ -46,8 +46,11 @@
     .status-reserved{background:rgba(245,157,19,.14);color:#915b00}
     .status-ready{background:rgba(0,82,184,.12);color:var(--blue)}
     .status-completed{background:rgba(22,139,63,.14);color:var(--green)}
+    .status-times-up{background:rgba(217,48,37,.14);color:#8b1e15}
     .status-select{border:1px solid rgba(0,82,184,.16);border-radius:12px;padding:8px;font-size:12px;outline:none;background:white}
     .delete-btn{background:var(--danger);color:white;border:none;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:800;cursor:pointer}
+    .amount-input{width:82px;border:1px solid rgba(0,82,184,.16);border-radius:10px;padding:8px;font-size:12px;outline:none}
+    .amount-btn{background:var(--green);color:white;border:none;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:800;cursor:pointer;margin-left:4px}
     .invalid-time-row{background:rgba(217,48,37,.08)}
     .valid-time-row{background:rgba(22,139,63,.04)}
     .time-warning{display:inline-block;margin-top:4px;padding:4px 8px;border-radius:999px;background:rgba(217,48,37,.12);color:#8b1e15;font-size:11px;font-weight:800}
@@ -79,7 +82,7 @@
         <img src="assets/rinova-logo.png" alt="Rinova Education Logo" />
         <div>
           <h2>Rinova Admin Panel</h2>
-          <p>Student leads and reward monitoring.</p>
+          <p>Student leads, rewards and recharge tracking.</p>
         </div>
       </div>
       <div class="actions">
@@ -90,14 +93,15 @@
     </header>
 
     <div class="note">
-      Latest entries are shown first. Entries before 11:00 AM or after 12:00 PM are highlighted red.
+      Latest unique mobile numbers are shown first. Duplicate mobile numbers are hidden. Reward amount is shown even if status is Times Up.
     </div>
 
     <section class="stats-grid">
-      <div class="stat-card"><span>Total Leads</span><strong id="totalLeads">0</strong></div>
+      <div class="stat-card"><span>Unique Leads</span><strong id="totalLeads">0</strong></div>
       <div class="stat-card"><span>Study Abroad</span><strong id="abroadLeads">0</strong></div>
       <div class="stat-card"><span>Classes / Skills</span><strong id="classLeads">0</strong></div>
-      <div class="stat-card"><span>Total Reserved Rewards</span><strong id="totalRewards">Rs.0</strong></div>
+      <div class="stat-card"><span>Total Reward</span><strong id="totalRewards">Rs.0</strong></div>
+      <div class="stat-card"><span>Amount Given</span><strong id="totalGiven">Rs.0</strong></div>
     </section>
 
     <section class="filter-card">
@@ -107,6 +111,7 @@
         <option value="Reserved">Reserved</option>
         <option value="Ready for Recharge">Ready for Recharge</option>
         <option value="Completed">Completed</option>
+        <option value="Times Up">Times Up</option>
       </select>
     </section>
 
@@ -120,6 +125,7 @@
             <th>Phone</th>
             <th>Interested In</th>
             <th>Reward</th>
+            <th>Amount Given</th>
             <th>Status</th>
             <th>Update Status</th>
             <th>Delete</th>
@@ -154,7 +160,9 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const ADMIN_PASSWORD = "rinova123";
+
     let cachedLeads = [];
+    let visibleLeads = [];
 
     function loginAdmin(){
       const password = document.getElementById("adminPassword").value.trim();
@@ -184,6 +192,7 @@
     }
 
     function getStatusClass(status){
+      if(status === "Times Up") return "status-times-up";
       if(status === "Completed") return "status-completed";
       if(status === "Ready for Recharge") return "status-ready";
       return "status-reserved";
@@ -193,7 +202,32 @@
       if(status === "Paid") return "Completed";
       if(status === "Approved") return "Ready for Recharge";
       if(status === "Pending") return "Reserved";
+      if(status === "Times Up") return "Times Up";
       return status || "Reserved";
+    }
+
+    function normalizePhone(phone){
+      return String(phone || "").replace(/[^0-9]/g,"");
+    }
+
+    function removeDuplicatePhones(leads){
+      const seenPhones = new Set();
+      const unique = [];
+
+      for(const item of leads){
+        const phone = normalizePhone(item.phone);
+
+        if(!phone) continue;
+
+        if(seenPhones.has(phone)){
+          continue;
+        }
+
+        seenPhones.add(phone);
+        unique.push(item);
+      }
+
+      return unique;
     }
 
     function isOutsideCampaignTime(createdAt){
@@ -202,8 +236,8 @@
       const minute = date.getMinutes();
 
       const totalMinutes = hour * 60 + minute;
-      const startTime = 11 * 60; // 11:00 AM
-      const endTime = 12 * 60;   // 12:00 PM
+      const startTime = 11 * 60;
+      const endTime = 12 * 60;
 
       return totalMinutes < startTime || totalMinutes > endTime;
     }
@@ -215,34 +249,43 @@
       const statusFilter = document.getElementById("statusFilter")?.value || "all";
 
       tbody.innerHTML = "";
+
       cachedLeads = await getLeads();
 
       cachedLeads.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
 
-      const filteredLeads = cachedLeads.filter((item)=>{
+      const uniqueLeads = removeDuplicatePhones(cachedLeads);
+
+      const filteredLeads = uniqueLeads.filter((item)=>{
         const status = normalizeStatus(item.rewardStatus);
         const text = `${item.name || ""} ${item.phone || ""} ${item.goal || ""}`.toLowerCase();
+
         return text.includes(search) && (statusFilter === "all" || status === statusFilter);
       });
 
-      document.getElementById("totalLeads").textContent = cachedLeads.length;
+      visibleLeads = filteredLeads;
 
-      document.getElementById("abroadLeads").textContent = cachedLeads.filter((item)=>{
+      document.getElementById("totalLeads").textContent = uniqueLeads.length;
+
+      document.getElementById("abroadLeads").textContent = uniqueLeads.filter((item)=>{
         const goal = (item.goal || "").toLowerCase();
         return goal.includes("abroad") || goal.includes("study");
       }).length;
 
-      document.getElementById("classLeads").textContent = cachedLeads.filter((item)=>{
+      document.getElementById("classLeads").textContent = uniqueLeads.filter((item)=>{
         const goal = (item.goal || "").toLowerCase();
         return !goal.includes("abroad") && !goal.includes("study");
       }).length;
 
       document.getElementById("totalRewards").textContent =
-        "Rs." + cachedLeads.reduce((sum,item)=>sum + Number(item.reward || 0),0);
+        "Rs." + uniqueLeads.reduce((sum,item)=>sum + Number(item.reward || 0),0);
+
+      document.getElementById("totalGiven").textContent =
+        "Rs." + uniqueLeads.reduce((sum,item)=>sum + Number(item.amountGiven || 0),0);
 
       if(filteredLeads.length === 0){
         emptyState.style.display = "block";
-        emptyState.textContent = cachedLeads.length === 0 ? "No leads found yet." : "No leads match your search/filter.";
+        emptyState.textContent = uniqueLeads.length === 0 ? "No leads found yet." : "No leads match your search/filter.";
         return;
       }
 
@@ -250,7 +293,7 @@
 
       filteredLeads.forEach((item,index)=>{
         const status = normalizeStatus(item.rewardStatus);
-        const phoneDigits = String(item.phone || "").replace(/[^0-9]/g,"");
+        const phoneDigits = normalizePhone(item.phone);
         const telNumber = phoneDigits.startsWith("977") ? "+" + phoneDigits : "+977" + phoneDigits;
 
         const outsideCampaignTime = isOutsideCampaignTime(item.createdAt);
@@ -267,11 +310,14 @@
           "<td><a class='phone-link' href='tel:" + telNumber + "'>" + (item.phone || "-") + "</a></td>" +
           "<td>" + (item.goal || "-") + "</td>" +
           "<td><strong>Rs." + (item.reward || 0) + "</strong></td>" +
+          "<td><input class='amount-input' id='amount-" + item.id + "' type='number' min='0' value='" + (item.amountGiven || "") + "' placeholder='Rs.' />" +
+          "<button class='amount-btn' onclick=\"saveAmountGiven('" + item.id + "')\">Save</button></td>" +
           "<td><span class='status-badge " + getStatusClass(status) + "'>" + status + "</span></td>" +
           "<td><select class='status-select' onchange=\"updateRewardStatus('" + item.id + "', this.value)\">" +
             "<option value='Reserved' " + (status === "Reserved" ? "selected" : "") + ">Reserved</option>" +
             "<option value='Ready for Recharge' " + (status === "Ready for Recharge" ? "selected" : "") + ">Ready for Recharge</option>" +
             "<option value='Completed' " + (status === "Completed" ? "selected" : "") + ">Completed</option>" +
+            "<option value='Times Up' " + (status === "Times Up" ? "selected" : "") + ">Times Up</option>" +
           "</select></td>" +
           "<td><button class='delete-btn' onclick=\"deleteLead('" + item.id + "')\">Delete</button></td>";
 
@@ -281,6 +327,17 @@
 
     async function updateRewardStatus(id,status){
       await updateDoc(doc(db,"leads",id),{ rewardStatus:status });
+      renderAdmin();
+    }
+
+    async function saveAmountGiven(id){
+      const input = document.getElementById("amount-" + id);
+      const amount = Number(input.value || 0);
+
+      await updateDoc(doc(db,"leads",id),{
+        amountGiven: amount
+      });
+
       renderAdmin();
     }
 
@@ -297,19 +354,20 @@
     }
 
     function downloadCSV(){
-      if(cachedLeads.length === 0){
-        alert("No data to export.");
+      if(visibleLeads.length === 0){
+        alert("No visible data to export.");
         return;
       }
 
-      const headers = ["Date","Full Name","Phone","Interested In","Reward","Status"];
+      const headers = ["Date","Full Name","Phone","Interested In","Reward","Amount Given","Status"];
 
-      const rows = cachedLeads.map((item)=>[
+      const rows = visibleLeads.map((item)=>[
         item.createdAt || "",
         item.name || "",
         item.phone || "",
         item.goal || "",
         "Rs." + (item.reward || 0),
+        "Rs." + (item.amountGiven || 0),
         normalizeStatus(item.rewardStatus)
       ]);
 
@@ -342,6 +400,7 @@
     window.refreshAdmin = refreshAdmin;
     window.renderAdmin = renderAdmin;
     window.updateRewardStatus = updateRewardStatus;
+    window.saveAmountGiven = saveAmountGiven;
     window.deleteLead = deleteLead;
   </script>
 </body>
