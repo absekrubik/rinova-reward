@@ -693,7 +693,7 @@
         <div class="promo-banner">
           <div class="banner-bg"></div>
           <div class="banner-content">
-            <span class="banner-badge">LIMITED OFFER 11:00am - 11:40am</span>
+            <span class="banner-badge">LIMITED OFFER</span>
             <h2>Register & Win</h2>
             <h3>Recharge upto Rs.100 🎁</h3>
             <p>Quick signup • Instant reward • Only for +2 students</p>
@@ -702,10 +702,11 @@
 
         <button class="btn" onclick="openPopup()">Start Registration</button>
 
+
         <div class="steps">
           <div class="step">
             <div class="step-number">1</div>
-            <p><strong>Verify Phone</strong>Enter your mobile number.</p>
+            <p><strong>Verify Phone</strong>Enter your mobile number and confirm with OTP.</p>
           </div>
           <div class="step">
             <div class="step-number">2</div>
@@ -782,12 +783,12 @@
             <div class="service-grid">
               <span>IELTS</span>
               <span>PTE</span>
-              <span>Tuition Classes</span>
-              <span>Stock Marketing</span>
+              <span>Accounting Package</span>
+              <span>Computer Classes</span>
               <span>Graphics Designing</span>
               <span>Digital Marketing</span>
               <span>Web Development</span>
-              <span>Tally Accounting</span>
+              <span>Content Creation</span>
             </div>
           </div>
           <button class="btn" onclick="nextAdSlide(3)">Next</button>
@@ -822,14 +823,10 @@
             <div class="ad-icon">⭐</div>
             <h2>Why Rinova?</h2>
             <ul class="why-list">
-              <li>Proven IELTS Results</li>
-              <li>Complete Transparency</li>
-              <li>Free Career Counseling</li>
-              <li>Scholarship-Focused Approach</li>
-              <li>High Visa Success Rate</li>
-              <li>Experienced Trainers</li>
-              <li>Attractive Offers Available</li>
-              
+              <li>Friendly counselling for your future goal</li>
+              <li>Experienced instructors and practical classes</li>
+              <li>Multiple courses under one roof</li>
+              <li>Free demo class and student support</li>
             </ul>
           </div>
           <button class="btn" onclick="showStep('stepStudent')">Continue Registration</button>
@@ -853,6 +850,7 @@
         <div class="form-group">
           <label for="goal">Interested In</label>
           <select id="goal">
+            <option value="">Select goal</option>
             <option>Study Abroad</option>
             <option>IELTS</option>
             <option>PTE</option>
@@ -860,7 +858,7 @@
             <option>Stock Marketing</option>
             <option>Counselling</option>
             <option>Improve English / Skills</option>
-          </select>
+
         </div>
 
         <label class="terms">
@@ -876,8 +874,41 @@
         <h2>Registration Complete!</h2>
         <p id="rewardMessage">Your reward result is ready.</p>
         <div class="reward-result" id="rewardAmount">Rs.20</div>
-        <p class="mini-note">Your reward has been reserved. Recharge can be completed later when eSewa Merchant API is available.</p>
-        <button class="btn" onclick="showVisitInfo()">Want Laptop or iPhone?</button>
+        <p class="mini-note">Our team will contact eligible students soon regarding reward confirmation and special offers.</p>
+        <button class="btn" onclick="showCompanyDetails()">Continue</button>
+        <button class="close-btn" onclick="closePopup()">Close</button>
+      </div>
+
+      <div id="stepCompany" class="form-step">
+        <div class="gift-icon">🏫</div>
+        <h2>About Rinova Education</h2>
+        <p>Rinova Education supports +2 passed students with study abroad counselling, test preparation, skill-based courses and career guidance.</p>
+
+        <div class="visit-card">
+          <strong>Our Services</strong>
+          <span>🎓 Study Abroad Counselling</span>
+          <span>📚 IELTS / PTE Preparation</span>
+          <span>💻 Computer, Digital Marketing & Web Development Classes</span>
+          <span>🧾 Career Guidance and Student Support</span>
+        </div>
+
+        <button class="btn" onclick="showLaptopOptions()">See Laptop & iPhone Offer</button>
+        <button class="close-btn" onclick="closePopup()">Close</button>
+      </div>
+
+      <div id="stepLaptop" class="form-step">
+        <div class="gift-icon">💻</div>
+        <h2>Want Laptop or iPhone?</h2>
+        <p>Lucky students may get special offers or a chance to win exciting gadgets. Visit Rinova with your registered phone number for more details.</p>
+
+        <div class="visit-card">
+          <strong>Special Lucky Winner Offer</strong>
+          <span>💻 Laptop offer for selected students</span>
+          <span>📱 iPhone offer for selected students</span>
+          <span>🎁 Bonus counselling and class offers available at our office</span>
+        </div>
+
+        <button class="btn" onclick="showVisitInfo()">View Visit Location</button>
         <button class="close-btn" onclick="closePopup()">Close</button>
       </div>
 
@@ -1037,6 +1068,18 @@
       return 10; // remaining 50%
     }
 
+    function isCampaignTimeActive() {
+      const now = new Date();
+      const hour = now.getHours();
+      const minute = now.getMinutes();
+      const totalMinutes = hour * 60 + minute;
+
+      const startTime = 11 * 60; // 11:00 AM
+      const endTime = 12 * 60;   // 12:00 PM
+
+      return totalMinutes >= startTime && totalMinutes <= endTime;
+    }
+
     async function submitStudentDemo() {
       const name = document.getElementById("studentName").value.trim();
       const goal = document.getElementById("goal").value;
@@ -1059,23 +1102,40 @@
         return;
       }
 
-      const reward = getReward();
+      const campaignActive = isCampaignTimeActive();
+      const reward = campaignActive ? getReward() : 0;
 
       const leadData = {
         phone: registeredPhone,
         name: name,
         goal: goal,
         reward: reward,
-        rewardStatus: "Reserved",
+        rewardStatus: campaignActive ? "Reserved" : "Times Up",
         deviceId: getDeviceId(),
         createdAt: new Date().toISOString()
       };
 
       await addDoc(collection(db, "leads"), leadData);
 
-      document.getElementById("rewardAmount").textContent = "Rs." + reward;
-      document.getElementById("rewardMessage").textContent = "Congratulations " + name + "! Your reward has been reserved successfully.";
+      if (campaignActive) {
+        document.getElementById("rewardAmount").textContent = "🎁";
+        document.getElementById("rewardMessage").textContent =
+          "Congratulations " + name + "! You have received your reward. Our team is currently reviewing your submission. You will receive your reward soon.";
+      } else {
+        document.getElementById("rewardAmount").textContent = "⏰";
+        document.getElementById("rewardMessage").textContent =
+          "Times up! The reward campaign time has ended. Thank you for registering with Rinova Education.";
+      }
+
       showStep("stepReward");
+    }
+
+    function showCompanyDetails() {
+      showStep("stepCompany");
+    }
+
+    function showLaptopOptions() {
+      showStep("stepLaptop");
     }
 
     function showVisitInfo() {
@@ -1089,6 +1149,8 @@
     window.verifyOtpDemo = verifyOtpDemo;
     window.nextAdSlide = nextAdSlide;
     window.submitStudentDemo = submitStudentDemo;
+    window.showCompanyDetails = showCompanyDetails;
+    window.showLaptopOptions = showLaptopOptions;
     window.showVisitInfo = showVisitInfo;
   </script>
 </body>
